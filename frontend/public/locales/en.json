@@ -1,0 +1,57 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "marketplace": "Marketplace",
+    "myOrders": "My Orders",
+    "weather": "Weather",
+    "addCrop": "List Crop",
+    "orders": "Orders",
+    "aiAdvisor": "AI Advisor",
+    "forecast": "Forecast",
+    "messages": "Messages",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout"
+  },
+  "home": {
+    "hero": {
+      "title": "Farm to Table,",
+      "subtitle": "Without the Middleman",
+      "desc": "KisanConnect empowers Indian farmers with direct market access, AI-driven crop advisory, and real-time demand forecasting.",
+      "cta1": "Join as Farmer",
+      "cta2": "Browse Marketplace"
+    },
+    "features": {
+      "title": "Why KisanConnect?",
+      "subtitle": "Everything farmers and buyers need in one platform."
+    },
+    "crops": {
+      "title": "Fresh From the Farm",
+      "subtitle": "Directly sourced, fairly priced produce."
+    },
+    "farmers": {
+      "title": "Meet Our Farmers",
+      "subtitle": "Real people growing real food."
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to your account",
+      "btn": "Sign In",
+      "noAccount": "Don't have an account?",
+      "register": "Register here"
+    },
+    "register": {
+      "title": "Create Account",
+      "btn": "Create Account"
+    },
+    "email": "Email Address",
+    "password": "Password"
+  },
+  "marketplace": {
+    "title": "Fresh Market",
+    "subtitle": "Browse directly from farmers.",
+    "search": "Search crops..."
+  }
+}

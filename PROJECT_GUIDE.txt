@@ -1,0 +1,528 @@
+================================================================================
+            KISANCONNECT – COMPLETE PROJECT DOCUMENTATION
+            SIH 2026 | Smart India Hackathon
+            Problem: Direct Farmer-to-Buyer Agricultural Marketplace
+================================================================================
+
+WHAT IS KISANCONNECT?
+----------------------
+KisanConnect is a full-stack digital agriculture platform built for Smart India
+Hackathon 2026. It directly connects farmers and FPOs (Farmer Producer
+Organizations) with buyers (consumers, retailers, bulk buyers), eliminating
+middlemen and ensuring farmers get fair prices for their produce.
+
+KEY FEATURES:
+  - Direct Farmer-to-Buyer marketplace (zero intermediaries)
+  - AI-powered Crop Recommendation (soil + climate ML model)
+  - Demand Forecasting (price & demand trend prediction)
+  - Route Optimization (multi-stop delivery planning with live map)
+  - Admin Approval workflow (crops go live only after admin review)
+  - Flexible Handover (Home Delivery OR Farm-Gate Pickup with OTP)
+  - Multilingual support (English, Hindi, Odia)
+  - Weather integration (live weather for farmers)
+  - Real-time farmer-buyer messaging
+
+================================================================================
+HOW TO RUN THE PROJECT (STEP BY STEP)
+================================================================================
+
+STEP 1 – Start the Backend API Server:
+  1. Open PowerShell or Terminal
+  2. Navigate to:  cd D:\Projects\SIH2026\kisanconnect
+  3. Run:  python -m uvicorn backend.main:app --reload
+  4. Backend runs at:  http://127.0.0.1:8000
+  5. API docs (Swagger UI):  http://127.0.0.1:8000/docs
+
+STEP 2 – Start the Frontend Dev Server:
+  1. Open a NEW PowerShell window
+  2. Navigate to:  cd D:\Projects\SIH2026\kisanconnect\frontend
+  3. Run:  npm run dev
+  4. Frontend runs at:  http://localhost:5173
+
+DEMO LOGIN CREDENTIALS:
+  Admin:   admin@kisanconnect.in    / admin123
+  Farmer:  farmerdemo@kisanconnect.in / farmaer123
+  Buyer:   buyerdemo@kisanconnect.in  / buyer123
+
+================================================================================
+TECH STACK – WHAT WE USE AND WHY
+================================================================================
+
+BACKEND:
+--------
+1. Python (FastAPI)
+   - WHY: Fastest Python web framework, auto-generates API docs (Swagger),
+     async support, and easy integration with ML libraries.
+   - WHERE: backend/ folder
+
+2. SQLAlchemy (ORM)
+   - WHY: Lets us write Python classes instead of raw SQL queries. Works with
+     both SQLite (development) and PostgreSQL (production/Supabase).
+   - WHERE: backend/models.py, backend/database.py
+
+3. SQLite Database
+   - WHY: Zero-config local database. File saved as kisanconnect.db.
+     Can be migrated to PostgreSQL/Supabase for production.
+   - WHERE: kisanconnect/kisanconnect.db (auto-created on first run)
+
+4. Pydantic v2
+   - WHY: Data validation and serialization. Ensures API inputs/outputs are
+     always correct types and formats.
+   - WHERE: backend/schemas.py
+
+5. JWT (JSON Web Tokens) – python-jose
+   - WHY: Secure, stateless user authentication. Token stored in browser,
+     sent with every API request to verify identity.
+   - WHERE: backend/routes/auth.py
+
+6. Passlib + bcrypt
+   - WHY: Securely hashes passwords. Never stores raw passwords in database.
+   - WHERE: backend/routes/auth.py
+
+7. Scikit-learn + NumPy + Pandas
+   - WHY: ML library for AI crop recommendation model.
+     RandomForest classifier trained on soil/climate data.
+   - WHERE: backend/ai/
+
+8. python-dotenv / pydantic-settings
+   - WHY: Reads secret config (database URL, JWT secret) from .env file
+     so secrets are never hardcoded in code.
+   - WHERE: backend/config.py, backend/.env
+
+FRONTEND:
+---------
+9. React 18 (with Vite)
+   - WHY: Component-based UI library. Fast hot-module-reload in development.
+     Industry standard for modern web apps.
+   - WHERE: frontend/src/
+
+10. React Router v6
+    - WHY: Client-side routing (navigate between pages without full reload).
+    - WHERE: frontend/src/App.jsx
+
+11. Axios
+    - WHY: HTTP client to call the backend API. Automatically attaches JWT
+      token to every request via interceptors.
+    - WHERE: frontend/src/services/api.js
+
+12. Tailwind CSS
+    - WHY: Utility-first CSS framework. Fast styling without writing custom CSS.
+      Responsive design built-in.
+    - WHERE: frontend/src/index.css, applied via className in all components
+
+13. i18next (Internationalization)
+    - WHY: Multilingual support. Translates the app to English, Hindi, Odia
+      based on user preference.
+    - WHERE: frontend/src/i18n.js, frontend/public/locales/
+
+14. Leaflet (react-leaflet)
+    - WHY: Free, open-source interactive maps (no API key needed).
+      Used for Route Optimization delivery map.
+    - WHERE: frontend/src/pages/RouteOptimization.jsx
+
+15. React Hot Toast
+    - WHY: Beautiful popup notifications for success/error messages.
+    - WHERE: Used throughout all pages
+
+16. Lucide React
+    - WHY: Clean, consistent icon library. Used for all icons in the UI.
+    - WHERE: Used in all components and pages
+
+================================================================================
+FILE STRUCTURE – EVERY FILE EXPLAINED
+================================================================================
+
+ROOT:  D:\Projects\SIH2026\kisanconnect\
+│
+├── kisanconnect.db       → SQLite database file (auto-created). All users,
+│                           crops, orders are stored here.
+├── seed.py               → Run this to pre-populate the database with demo
+│                           farmers, buyers, crops, and orders for testing.
+├── .env                  → Environment variables (DATABASE_URL). Never commit
+│                           to GitHub!
+├── .env.example          → Safe template showing which variables are needed.
+├── .gitignore            → Tells Git which files NOT to track (venv, db, etc.)
+└── README.md             → Quick setup instructions
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BACKEND:  kisanconnect/backend/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+config.py
+  → WHAT: Central settings file (app name, JWT secret, DB URL, CORS origins).
+  → WHY:  Single place to control all configuration. Reads from .env file.
+
+database.py
+  → WHAT: Creates the SQLite database engine and session factory.
+  → WHY:  Every API route calls get_db() from here to talk to the database.
+
+models.py
+  → WHAT: Defines all database tables as Python classes:
+          - User (farmers, buyers, admin)
+          - Crop (listings with price, quantity, category)
+          - Order + OrderItem (purchase records)
+          - Payment (payment tracking)
+          - Message (farmer-buyer chat)
+          - Feedback (ratings and reviews)
+          - FarmerProfile (extended farmer info)
+  → WHY:  SQLAlchemy ORM – write Python, not SQL.
+
+schemas.py
+  → WHAT: Pydantic models that define what data the API accepts and returns.
+          E.g., UserCreate (to register), UserRead (to display user data).
+  → WHY:  Auto-validates incoming requests and formats outgoing responses.
+
+main.py
+  → WHAT: The FastAPI app entry point. Registers all route routers,
+          sets up CORS middleware, creates database tables on startup.
+  → WHY:  The app starts here. uvicorn runs this file.
+
+requirements.txt
+  → WHAT: List of all Python packages needed.
+  → WHY:  Run "pip install -r requirements.txt" to install everything at once.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BACKEND ROUTES:  kisanconnect/backend/routes/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+auth.py
+  → WHAT: /api/auth/register, /api/auth/login, /api/auth/me
+  → WHY:  Handles user signup, login (returns JWT token), and get current user.
+  → HOW:  POST /register with name+email+password → creates user account.
+          POST /login with email+password → returns access_token for future calls.
+
+crops.py
+  → WHAT: All crop listing CRUD operations.
+          GET  /api/crops/          → Public marketplace (APPROVED crops only)
+          POST /api/crops/          → Farmer creates a new crop listing
+          GET  /api/crops/my/listings → Farmer's own crops (all statuses)
+          GET  /api/crops/{id}      → Single crop details
+          PUT  /api/crops/{id}      → Update a crop
+          DELETE /api/crops/{id}   → Delete a crop (farmer or admin)
+          PATCH /api/crops/{id}/approval → Admin approves/rejects
+  → WHY:  Core marketplace functionality. New crops start as PENDING until
+          admin approves them.
+
+orders.py
+  → WHAT: Order placement and management.
+          POST /api/orders/         → Buyer places an order
+          GET  /api/orders/my       → Buyer sees their orders
+          GET  /api/orders/farmer/incoming → Farmer sees orders for their crops
+          PUT  /api/orders/{id}/status   → Update order status
+  → WHY:  Manages the purchase flow from cart to delivery. Supports two
+          handover methods: DELIVERY (home) or PICKUP (farm-gate with OTP).
+
+admin.py
+  → WHAT: Admin-only endpoints.
+          GET /api/admin/stats           → Platform stats (users, crops, orders)
+          GET /api/admin/crops/pending   → All crops awaiting review
+          GET /api/admin/crops/all       → All crops (any status)
+          GET /api/admin/users           → All registered users
+          PATCH /api/admin/users/{id}/toggle-active → Activate/deactivate user
+  → WHY:  Central management panel for admins to moderate the platform.
+
+auth.py (auth guards)
+  → require_role(role) → Restricts endpoints to specific roles (FARMER/BUYER/ADMIN)
+  → get_current_user   → Decodes JWT token to identify who is making the request
+
+farmers.py
+  → WHAT: Farmer profile creation and viewing.
+  → WHY:  Extended farmer info (land size, FPO membership, bio, certifications).
+
+messages.py
+  → WHAT: Farmer-buyer direct messaging.
+  → WHY:  Allows buyers to ask farmers about crops without middlemen.
+
+payments.py
+  → WHAT: Mock payment intent creation and confirmation.
+  → WHY:  Simulates UPI/payment gateway for demo purposes.
+
+feedback.py
+  → WHAT: Rating and review submission for farmers/crops.
+  → WHY:  Builds trust by allowing buyers to rate their experience.
+
+ai.py
+  → WHAT: AI/ML endpoints:
+          POST /api/ai/crop-recommend    → Soil data → crop recommendations
+          POST /api/ai/demand-forecast   → Crop name → price/demand forecast
+          POST /api/ai/route-optimize    → Destinations → optimized delivery route
+  → WHY:  Core differentiator of the platform. Adds intelligent features.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BACKEND AI:  kisanconnect/backend/ai/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+crop_model.py
+  → WHAT: RandomForest ML model. Takes soil parameters (N, P, K, pH, rainfall,
+          temperature) and predicts the best crops to grow.
+  → WHY:  Helps farmers make data-driven decisions about what to plant.
+
+demand_model.py
+  → WHAT: Time-series forecasting. Shows projected price and demand trend
+          for any crop over 7-365 days.
+  → WHY:  Helps farmers decide WHEN to sell for maximum profit.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND:  kisanconnect/frontend/src/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+main.jsx
+  → App entry point. Initializes React, i18next multilingual, and mounts the app.
+
+App.jsx
+  → Defines all page routes (which URL shows which page). Protects routes based
+    on user roles (farmer-only, buyer-only, admin-only).
+
+index.css
+  → Global styles. Defines the green color palette, glass-morphism effects,
+    card styles (kc-card), button styles (btn-primary, btn-accent), animations.
+
+i18n.js
+  → Configures multilingual support. Loads translations from public/locales/.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND PAGES:  frontend/src/pages/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Home.jsx
+  → Landing page. Hero section, How It Works, Features, Marketplace preview,
+    CTA banner. Fetches real crops from backend API.
+
+Login.jsx
+  → Login form. Calls /api/auth/login, stores JWT token, redirects by role.
+
+Register.jsx
+  → Registration form. User selects FARMER or BUYER role during signup.
+
+Marketplace.jsx
+  → Public crop browsing. Search, filter by category, price range, organic.
+    Only shows APPROVED crops.
+
+CropDetails.jsx
+  → Full details of a single crop. Shows farmer info, price, add to cart button.
+
+AddCrop.jsx
+  → Farmer-only page to list a new crop with name, category, price, quantity,
+    description, image URL. Crop goes to PENDING status after submission.
+
+FarmerDashboard.jsx
+  → Farmer's control center:
+    - My Listings tab: All their crops with approval status
+    - Incoming Orders tab: Orders placed for their crops
+    - Logistics tab: Delivery management and route optimization
+
+BuyerDashboard.jsx
+  → Buyer's overview: order history, spending summary.
+
+Orders.jsx
+  → Buyer's order tracking page. Shows order status, OTP for pickup orders.
+
+Payment.jsx
+  → Checkout page. Shows cart summary, delivery vs farm-gate pickup selection,
+    address input, mock UPI payment simulation.
+
+AdminDashboard.jsx
+  → Admin control panel with 4 tabs:
+    - Overview: Platform stats (total users, farmers, crops, orders)
+    - Pending Crops: Approve or reject new crop listings
+    - All Crops: View and delete any crop on the platform
+    - All Users: View users, activate/deactivate accounts
+
+Messages.jsx
+  → Direct messaging between farmer and buyer accounts.
+
+Weather.jsx
+  → Live weather data for farmers. Uses OpenMeteo free API (no key needed).
+    Shows temperature, humidity, wind speed, UV index.
+
+AIRecommendation.jsx
+  → Enter soil parameters (N, P, K, pH, rainfall, temperature) → get top 5
+    crop recommendations with confidence scores from the ML model.
+
+DemandForecast.jsx
+  → Enter a crop name → see projected price chart and demand trend for next
+    30-365 days. Helps farmers plan harvest and selling timing.
+
+RouteOptimization.jsx
+  → Interactive Leaflet map showing optimized delivery route from farmer's
+    location to all buyer delivery addresses. Now fetches REAL buyer orders
+    from the backend instead of fake demo data.
+
+FarmerProfile.jsx
+  → Public farmer profile page. Shows farmer details, ratings, crop listings.
+
+Feedback.jsx
+  → Submit star rating and comment for a farmer or crop.
+
+CropPending.jsx
+  → Farmer's view of crops still waiting for admin approval.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND COMPONENTS:  frontend/src/components/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Navbar.jsx
+  → Top navigation bar. Shows different links based on login role.
+    Cart icon with item count, language switcher, user avatar.
+
+Footer.jsx
+  → Site footer with links, features list, contact info (Bhubaneswar, Odisha).
+
+CropCard.jsx
+  → Reusable crop listing card. Displayed in Marketplace and Home page.
+    Shows crop image, name, price, organic badge, add-to-cart button.
+
+FarmerCard.jsx
+  → Reusable farmer profile card with rating stars and crop count.
+
+StatCard.jsx
+  → Reusable stat display card used in Admin and Buyer dashboards.
+
+OrderStatusStepper.jsx
+  → Visual stepper showing order progress:
+    PLACED → CONFIRMED → SHIPPED → DELIVERED
+
+LanguageSelector.jsx
+  → Dropdown to switch between English, Hindi (हिंदी), and Odia (ଓଡ଼ିଆ).
+
+CropImage.jsx
+  → Smart image component with fallback placeholder if image URL is missing/broken.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND SERVICES:  frontend/src/services/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+api.js
+  → Base Axios instance. Points to http://localhost:8000/api.
+    Automatically adds "Authorization: Bearer <token>" header to all requests.
+    If 401 error, logs user out automatically.
+
+cropService.js
+  → Functions to call crop API endpoints (list, get, create, update, delete).
+
+orderService.js
+  → Functions to call order API endpoints (place order, get my orders).
+
+aiService.js
+  → Functions to call AI endpoints (crop recommend, demand forecast, route optimize).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND CONTEXT:  frontend/src/context/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AuthContext.jsx
+  → Global auth state. Stores logged-in user info and JWT token. Provides
+    login() and logout() functions. All pages use useAuth() hook to get user.
+
+AppContext.jsx
+  → Global app state. Stores shopping cart items. Provides addToCart(),
+    removeFromCart(), clearCart() functions.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND HOOKS:  frontend/src/hooks/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+useWeather.js
+  → Custom React hook. Fetches live weather data from OpenMeteo API
+    based on user's browser location (GPS coordinates).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND CONFIG:  frontend/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+vite.config.js
+  → Vite build config. Includes proxy setting to forward /api requests to
+    http://localhost:8000 (the Python backend). This is why there are no
+    CORS errors in development.
+
+package.json
+  → Lists all npm packages and defines scripts:
+    "npm run dev"   → start development server
+    "npm run build" → create production bundle
+
+================================================================================
+USER FLOW WALKTHROUGH
+================================================================================
+
+FARMER FLOW:
+  1. Register at /register → select "Farmer" role
+  2. Login → redirected to /farmer-dashboard
+  3. Go to "Add Crop" → fill form → submit (status: PENDING)
+  4. Admin approves crop → crop goes LIVE on marketplace
+  5. Buyers place orders → farmer sees in "Incoming Orders" tab
+  6. Farmer can open Route Optimization → see all delivery addresses on map
+
+BUYER FLOW:
+  1. Register at /register → select "Buyer" role
+  2. Browse /marketplace → search and filter crops
+  3. Click crop → "Add to Cart"
+  4. Go to /payment → choose Home Delivery or Farm-Gate Pickup
+  5. For pickup: receive 4-digit OTP to show farmer
+  6. Track order at /orders
+
+ADMIN FLOW:
+  1. Login as admin@kisanconnect.in
+  2. Go to /admin → see platform stats
+  3. Click "Pending Crops" → approve or reject with reason
+  4. Click "All Crops" → delete any crop
+  5. Click "All Users" → activate or deactivate accounts
+
+================================================================================
+API QUICK REFERENCE
+================================================================================
+
+AUTH:
+  POST /api/auth/register   → Create account
+  POST /api/auth/login      → Get JWT token
+  GET  /api/auth/me         → Get logged-in user info
+
+CROPS:
+  GET    /api/crops/              → Public marketplace
+  POST   /api/crops/              → Create crop (Farmer only)
+  GET    /api/crops/my/listings   → My crops (Farmer only)
+  DELETE /api/crops/{id}          → Delete crop (Farmer/Admin)
+  PATCH  /api/crops/{id}/approval → Approve/reject (Admin only)
+
+ORDERS:
+  POST /api/orders/                → Place order (Buyer)
+  GET  /api/orders/my              → My purchases (Buyer)
+  GET  /api/orders/farmer/incoming → My incoming orders (Farmer)
+
+ADMIN:
+  GET   /api/admin/stats              → Platform stats
+  GET   /api/admin/crops/pending      → Pending crops
+  GET   /api/admin/crops/all          → All crops
+  GET   /api/admin/users              → All users
+  PATCH /api/admin/users/{id}/toggle-active → Toggle user active
+
+AI:
+  POST /api/ai/crop-recommend   → Soil data → crop suggestions
+  POST /api/ai/demand-forecast  → Crop name → price forecast
+  POST /api/ai/route-optimize   → Locations → optimized route
+
+================================================================================
+IMPORTANT NOTES FOR THE TEAM
+================================================================================
+
+1. NEVER commit kisanconnect.db or .env to GitHub (they contain sensitive data).
+   Both are already in .gitignore.
+
+2. The backend MUST be running before the frontend can fetch any data.
+   Start backend FIRST, then frontend.
+
+3. Always run the backend from D:\Projects\SIH2026\kisanconnect (not from inside
+   the backend folder). Wrong directory = ModuleNotFoundError.
+
+4. If you see "ECONNREFUSED" in the Vite terminal, it means the backend is not
+   running. Restart it with: python -m uvicorn backend.main:app --reload
+
+5. To reset the database and start fresh with demo data:
+   python seed.py   (run from kisanconnect folder)
+
+6. View all API endpoints with interactive testing at:
+   http://127.0.0.1:8000/docs  (Swagger UI)
+
+================================================================================
+                    KisanConnect – Empowering Indian Farmers
+                    SIH 2026 | Built with ❤ for Bharat
+================================================================================
