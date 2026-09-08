@@ -16,7 +16,7 @@ KisanConnect is a full-stack digital platform designed to eliminate intermediari
 - **Backend**: Python, FastAPI, SQLAlchemy, SQLite, JWT Auth.
 - **ML/AI**: Scikit-learn (RandomForest, Time-series).
 
-## Getting Started
+## Getting Started.
 
 ### 1. Backend Setup
 ```bash
